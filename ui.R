@@ -180,7 +180,10 @@ color:',color_text,'!important;
                     hr(),
                     h5("3.	Forecast the grade point average for next two year (i.e. 2021 and 2022).", class = "textblue"),
                     br(),
-                    plotOutput("chart_prediction", width = "50%")
+                    plotOutput("chart_prediction", width = "50%"),
+                    h5("4.	For each year between 2010 and 2020, estimate the predicted probability of having a grade point average above 2 for students with a job vs. students without a job (controlling for sex and age).", class = "textblue"),
+                    br(),
+                    DT::dataTableOutput("table_probit")
                     
                     ),
           

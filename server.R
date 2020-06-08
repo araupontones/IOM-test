@@ -301,6 +301,12 @@ server <- function(input, output, session) {
     chart_prediction
   })
 
+  output$table_probit <- DT::renderDataTable({
+    
+    DT::datatable(data_prob %>%
+                    select(Year, Estimate, p.value))
+    
+  })
 ##### Map ------------------------------------------------------------------------------------------------------------------- 
   
   output$map <- renderLeaflet({

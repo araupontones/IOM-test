@@ -28,11 +28,8 @@ output: html_document
 
 <br/>
 
-## How to use this app
-
-For each task of the test, a tab was created. Please go to each tab in the navigation bar to see the answers.
+## How to use this app?
 
 
-
-
+[![Video](https://i.ibb.co/MsqjqjL/IOM.png)](https://youtu.be/ff3ZEsOEanA "Video")
 

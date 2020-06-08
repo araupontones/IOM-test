@@ -17,18 +17,13 @@ getwd()
 students_excel = ("data_students.xlsx")
 faculties_excel = ("data_faculty.xlsx")
 
-
-
 ##2. read files -----------------------------------------------------------------------------------
-
 
 raw_students = read_xlsx(students_excel)
 raw_faculties = read_xlsx(faculties_excel)
 raw_countries = countryref
 
-
-
-##2. clean students data base -----------------------------------------------------------------------------
+##3. clean students data base -----------------------------------------------------------------------------
 
 clean_students = raw_students %>% 
   mutate_if(is.character, list(~na_if(., "NA"))) %>% ##drop rows missing all variables
@@ -38,18 +33,14 @@ clean_students = raw_students %>%
   mutate(job = job=="yes") %>% ##job as logical
   mutate(course = str_to_title(course)) %>% ##Capitals to course for better vis in dashboard
   mutate_if(is.character, as.factor) ## all characters as factors and 'like' and 'term' as ordered factors
-  
-         
-  
 
-
-##2.1 clean faculties
+##3.1 clean faculties
 
   clean_faculties = raw_faculties %>%
     mutate(faculty = factor(faculty),
            costs = prettyNum(costs, big.mark = ","))
   
-##2.3 clean countries 
+##3.2 clean countries 
   clean_countries = raw_countries %>%
     filter(type == "country") %>%
     group_by(name) %>%
@@ -66,7 +57,6 @@ clean_students = raw_students %>%
     filter(cob %in% unique(clean_students$cob))%>%
     mutate(cob = factor(cob))
   
-
 ##University of Berlin: data frame with lat and long (from google maps), and the Uni's logo
   
   icon = "https://w7.pngwing.com/pngs/7/6/png-transparent-computer-icons-university-academic-degree-bank-angle-people-logo.png"
@@ -74,11 +64,7 @@ clean_students = raw_students %>%
                                  "lon" = 13.283312,
                                  'logo' = icon)
     
- 
-  
-
-
-####DATA MANIPULATION & DESCRIPTIVE STATS ------------------------------------------------------------------
+ ####DATA MANIPULATION & DESCRIPTIVE STATS ------------------------------------------------------------------
   
   
 ##1. summary table ------------------------------------------------------------------------------------------
@@ -105,17 +91,13 @@ summary_table = clean_students %>%
     
     gpa_2010 = round(mean(gpa_2010), digits = 1),
     
-    ##average number of terms  !!! ask marti
+    ##average number of terms
     
     terms = round(mean(term), digits = 3)
     
-    
     )
 
-
-
 ### 2. Differences in life satistfaction by faculty and relationship status ----------------------------
-
 
 ##prepare data for points 
 data_points = clean_students %>%
@@ -131,13 +113,11 @@ data_points = clean_students %>%
   ) %>%
   select(-mean_ls)
 
-
 ##data for dumbbells (the lines that connect the points)
 data_dumbbells = data_points %>%
   spread(key = "relationship", value=lifesat) %>% ##create a column for each relationship status
   rename(relationship = `In a relationship`) %>%
   mutate(diff = relationship - Single) ##to create a column in the chart showing the differences (if I have time)
-
 
 
 ##theme of the chart
@@ -204,9 +184,6 @@ color2 = '#CB641D'
     xlab("Average life satisfaction") +
     tema +
    theme(axis.text.x = element_blank())  ##delete text in x Axis
-    
-    
-#chart_lifesat
   
 ###3.Differences in the average cost by faculty and job status ---------------------------------------------- 
 
@@ -238,8 +215,6 @@ color2 = '#CB641D'
    labs(caption = "Data from Berlin University") +
    tema 
  
- #chart_cost
- 
 ### 4. Visual showing relationship between life satisfaction and age ------------------------------------------
  
  ##prepare data: group by age
@@ -262,15 +237,12 @@ color2 = '#CB641D'
     tema
  
   
-
-  
-##### MMODELLIG -----------------------------------------------------------------------------------------------
+##### MODELLING -----------------------------------------------------------------------------------------------
   
 ##1 relationship status  effect on life satisfaction ----------------
   ##prepare data for model
   model_data = clean_students %>%
     left_join(clean_faculties) ##to get salaries
-  
   
   ##run a linear model controling for term, age,sex, and salary
   linearMod <- lm(lifesat ~ relationship + term + age + sex + salary , data=model_data)
@@ -285,24 +257,23 @@ color2 = '#CB641D'
   
 ##2 Job on average grade point over the last 10 years 
   
-  
-  ##Prepare Data: calculate average gpa
+  ##Prepare data to later calculate average gpa of the last 10 years (2011 to 2020)
   gpa_vars = names(clean_students)[str_detect(names(clean_students), "gpa")]
   #gpa_vars= str_remove(gpa_vars,"gpa_2010")
   gpa_vars1120 = gpa_vars[-which(gpa_vars=="gpa_2010")]
  
-  ##averages of the last 3 years
-  gpa_vars20 = paste0("gpa_",seq(2017,2019,1))
-  gpa_vars21 = paste0("gpa_",seq(2018,2020,1))
-  gpa_vars22 = paste0("gpa_",seq(2019,2021,1))
+  ##prepare data for averages of the past 5 years (for next exercise)
+  gpa_vars20 = paste0("gpa_",seq(2015,2019,1))
+  gpa_vars21 = paste0("gpa_",seq(2016,2020,1))
+  gpa_vars22 = paste0("gpa_",seq(2017,2021,1))
  
   data_model = clean_students %>%
     mutate(avg20 = rowSums(select(., gpa_vars1120))/10,
            ##calculate average gpa over the last 10 years
-           avg320 = rowSums(select(., gpa_vars20))/3,
-           ##calculate average gpa over the last 3 years for 2020
-           avg321 = rowSums(select(.,gpa_vars21))/3
-           ##calculate average gpa over the last 3 years for 2021
+           avg520 = rowSums(select(., gpa_vars20))/5,
+           ##calculate average gpa of the past 5 years for 2020
+           avg521 = rowSums(select(.,gpa_vars21))/5
+           ##calculate average gpa of the past 5 years for 2021
            ) 
     
   ## Linear model controlling for sex, age
@@ -318,15 +289,15 @@ color2 = '#CB641D'
 ##3	Forecast the grade point average for next two years (i.e. 2021 and 2022)
   
   ##generate a quick prediction model based on job status and 10 years average
-  predict_ols = lm(gpa_2020 ~ avg320 + job, data = data_model)
+  predict_ols = lm(gpa_2020 ~ avg520 + job, data = data_model)
   
   ##check prediction works, predict, and prepare data for vis
 
   data_predicted = data_model %>%
     mutate(gpa_2020_hat = predict(predict_ols, data = .), ##check prediction works
-           gpa_2021 = predict_ols$coefficients[1] + predict_ols$coefficients[2]*avg321 + predict_ols$coefficients[3]*job) %>%
-    mutate(avg322 = rowSums(select(.,gpa_vars22))/3, ##calculate 10 years average for 2021
-           gpa_2022 = predict_ols$coefficients[1] + predict_ols$coefficients[2]*avg322 + predict_ols$coefficients[3]*job) %>%
+           gpa_2021 = predict_ols$coefficients[1] + predict_ols$coefficients[2]*avg521 + predict_ols$coefficients[3]*job) %>%
+    mutate(avg522 = rowSums(select(.,gpa_vars22))/2, ##calculate average gpa of last 5 years for 2022
+           gpa_2022 = predict_ols$coefficients[1] + predict_ols$coefficients[2]*avg522 + predict_ols$coefficients[3]*job) %>%
     select(.,contains("gpa"), -gpa_2020_hat) %>%
     gather(key = "Year", value = gpa)   %>%
     mutate(Year = str_remove_all(Year, "gpa_")) %>% ##reshape the data for vis
@@ -337,9 +308,7 @@ color2 = '#CB641D'
            Year = year(as.Date(as.character(Year), format = "%Y"))
     )
   
-  
-  
-##Create chart to vis prediction 
+    ##Create chart to vis prediction 
  chart_prediction =  ggplot(data = data_predicted %>%
            filter(predicted ==F), 
          aes(x = Year,
@@ -367,11 +336,46 @@ color2 = '#CB641D'
     tema
 
   
+## 4.	For each year between 2010 and 2020, estimate the predicted probability of having a grade point average above 2 for students with a job vs. students without a job 
+ 
+ ##gpa variables
+ gpas = paste0("gpa_", seq(2010,2020,1))
 
 
 
+##function to estimate the probability by year
+ probits <- function(g){
+   
+   data_loop = clean_students
+   ##identify if gpa of the year > 2
+   new_var = paste0("flag_", g)
+   data_loop[new_var] = data_loop[g]>2
+   
+   ##Estimate probit
+   probit_model<- glm(get(new_var) ~ job + sex + age, data = data_loop, family = binomial(link = "probit"))
+   probability =  probit_model$coefficients[2]
+   
+   ##create table with coefficients and p values
+   data1 <- data.frame(
+     Estimate = round(coef(summary(probit_model))[1,][1], digits = 2),
+     `p value` = round(coef(summary(probit_model))[1,][4], digits = 2),
+     Year = str_remove(g, "gpa_")
+   )
+ 
+   #return the data
+   return(data1)
+   
+ }
   
-#####MAPS -----------------------------------------------------------------------------------------------------
+ ##run the probit for all years
+ probabilities = map(gpas, probits)
+ 
+ ##append data into a single table; data_prob contains the estimates and p values for each year 
+ data_prob = do.call(rbind, probabilities)
+ 
+ 
+
+ #####MAPS -----------------------------------------------------------------------------------------------------
 
   ##prepare data: group by country, count students, and join with centroinds
  data_cob = clean_students %>%
