@@ -1,0 +1,38 @@
+---
+title: ""
+author: "Andrés Arau"
+date: "6/8/2020"
+output: html_document
+---
+
+
+# Welcome to Andres Arau's Data Analytics Consultant Test
+
+<br/>
+
+ ![](https://www.iom.int/sites/all/themes/iom/logo.png) 
+ 
+ 
+<br/>
+
+
+
+
+## Code 
+
+>To get the code used to answer the test go here (100% reproducible): <https://github.com/araupontones/IOM-test>.
+
+* **clean.R:** Reads, cleans, and re-shapes the data. All the analysis and visualizations are executed here,
+* **ui.R:**  Creates the User Interface of this shiny app,
+* **server.R:** Creates the server of this shiny app,
+
+<br/>
+
+## How to use this app
+
+For each task of the test, a tab was created. Please go to each tab in the navigation bar to see the answers.
+
+
+
+
+
